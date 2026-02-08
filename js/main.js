@@ -36,7 +36,13 @@ import { ParticleSystem } from './effects/ParticleSystem.js';
 
 class PolyRacer {
     constructor() {
-        // ... (existing code) ...
+        // Get canvas
+        this.canvas = document.getElementById('game-canvas');
+
+        // Core systems
+        this.engine = new Engine(this.canvas);
+        this.renderer = new Renderer(this.canvas);
+        this.inputManager = new InputManager();
         this.camera = new Camera();
 
         // Physics
