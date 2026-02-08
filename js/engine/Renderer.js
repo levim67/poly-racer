@@ -49,6 +49,41 @@ export class Renderer {
 
         // Setup skybox/environment
         this.setupEnvironment();
+
+        // Create mountains
+        this.createMountains();
+    }
+
+    createMountains() {
+        const mountainCount = 40;
+        const mountainGroup = new THREE.Group();
+
+        const colors = [0x4a6741, 0x3d5c5c, 0x5c4033]; // Greenish, Blueish, Brownish
+
+        for (let i = 0; i < mountainCount; i++) {
+            const height = 40 + Math.random() * 60;
+            const radius = 30 + Math.random() * 20;
+            const segments = 3 + Math.floor(Math.random() * 3); // 3-5 segments for low poly look
+
+            const geo = new THREE.ConeGeometry(radius, height, segments);
+            const mat = this.createMaterial(colors[Math.floor(Math.random() * colors.length)]);
+            const mesh = new THREE.Mesh(geo, mat);
+
+            // Random position in a ring
+            const angle = (i / mountainCount) * Math.PI * 2 + (Math.random() * 0.5);
+            const dist = 300 + Math.random() * 100;
+
+            mesh.position.x = Math.sin(angle) * dist;
+            mesh.position.z = Math.cos(angle) * dist;
+            mesh.position.y = height / 2 - 10; // Buried slightly
+
+            // Random rotation
+            mesh.rotation.y = Math.random() * Math.PI;
+
+            mountainGroup.add(mesh);
+        }
+
+        this.scene.add(mountainGroup);
     }
 
     setupLighting() {

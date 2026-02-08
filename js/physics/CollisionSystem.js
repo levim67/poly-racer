@@ -108,20 +108,36 @@ export class CollisionSystem {
             barrierBox.applyMatrix4(barrier.matrixWorld);
 
             if (boundingBox.intersectsBox(barrierBox)) {
-                // Calculate push direction
+                // Calculate intersection depth
+                const intersection = boundingBox.clone().intersect(barrierBox);
+                const xPen = intersection.max.x - intersection.min.x;
+                const zPen = intersection.max.z - intersection.min.z;
+
+                // Determine push direction based on shallowest penetration
+                const pushDir = new THREE.Vector3();
                 const center = new THREE.Vector3();
                 boundingBox.getCenter(center);
-
                 const barrierCenter = new THREE.Vector3();
                 barrierBox.getCenter(barrierCenter);
 
-                const pushDir = center.clone().sub(barrierCenter).normalize();
-                pushDir.y = 0;
+                const dirToSelf = center.sub(barrierCenter);
+
+                let penetration = 0;
+
+                if (xPen < zPen) {
+                    // Push along X
+                    pushDir.set(Math.sign(dirToSelf.x), 0, 0);
+                    penetration = xPen;
+                } else {
+                    // Push along Z
+                    pushDir.set(0, 0, Math.sign(dirToSelf.z));
+                    penetration = zPen;
+                }
 
                 return {
                     collided: true,
                     normal: pushDir,
-                    penetration: 0.5
+                    penetration: penetration + 0.1 // Push out slightly more to be safe
                 };
             }
         }

@@ -22,30 +22,30 @@ export class VehiclePhysics {
         // Vehicle properties
         this.config = {
             // Engine
-            maxSpeed: 80,               // m/s (~288 km/h)
-            acceleration: 25,           // m/s²
+            maxSpeed: 90,               // m/s (~324 km/h)
+            acceleration: 30,           // m/s²
             brakeForce: 40,            // m/s²
             reverseMaxSpeed: 20,        // m/s
 
             // Steering
             maxSteerAngle: 0.8,         // radians
-            steerSpeed: 3,              // how fast steering responds
+            steerSpeed: 5,              // faster steering response
             steerSpeedFactor: 0.7,      // reduce steering at high speed
 
             // Drifting
-            driftFriction: 0.92,
+            driftFriction: 0.96,        // higher grip while drifting
             normalFriction: 0.98,
-            driftSteerMultiplier: 1.5,
+            driftSteerMultiplier: 1.2,
             driftSpeedBoost: 1.1,
 
             // Grip
-            gripFront: 0.95,
-            gripRear: 0.85,
+            gripFront: 0.98,
+            gripRear: 0.90,
 
             // Suspension
             suspensionHeight: 0.5,
-            suspensionStiffness: 15,
-            suspensionDamping: 3,
+            suspensionStiffness: 25,    // Stiffer suspension
+            suspensionDamping: 5,
 
             // Gravity
             gravity: -30,

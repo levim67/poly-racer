@@ -30,7 +30,7 @@ export class TrackBuilder {
 
     createRoadMaterial() {
         return new THREE.MeshLambertMaterial({
-            color: 0x555566, // Lighter road
+            color: 0x333344, // Darker road (like Poly Track)
             flatShading: true
         });
     }
@@ -74,7 +74,7 @@ export class TrackBuilder {
     buildPiece(piece, startPos, startDir, startHeight, index) {
         const type = piece.type;
         const length = piece.length || 20;
-        const width = piece.width || 8;
+        const width = piece.width || 14; // Wider default
         const angle = piece.angle || 0;
         const heightChange = piece.heightChange || 0;
 
