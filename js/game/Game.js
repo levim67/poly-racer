@@ -3,6 +3,7 @@
  * Coordinates all game systems
  */
 
+import * as THREE from 'three';
 import { Timer } from './Timer.js';
 
 export class Game {
@@ -13,6 +14,10 @@ export class Game {
         this.state = 'menu'; // menu, countdown, playing, paused, finished
         this.currentTrack = null;
         this.currentTrackId = 'track1';
+
+        // Spawn position
+        this.spawnPosition = new THREE.Vector3(0, 0.5, 5);
+        this.spawnRotation = 0;
 
         // Race state
         this.timer = new Timer();
