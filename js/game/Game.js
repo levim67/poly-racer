@@ -1,10 +1,5 @@
-/**
- * Main Game Logic
- * Coordinates all game systems
- */
-
 import * as THREE from 'three';
-import { Timer } from './Timer.js';
+import { Timer } from './RaceTimer.js';
 
 export class Game {
     constructor(engine) {
