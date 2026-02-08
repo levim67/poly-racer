@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Poly Racer - 3D Racing Game</title>
+    <meta name="description"
+        content="A fast-paced low-poly 3D racing game with loops, jumps, and time-trial racing. Race against your best times!">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;500;700&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+    <div id="loading-screen">
+        <div class="loader-content">
+            <h1 class="game-title">POLY RACER</h1>
+            <div class="loader-bar">
+                <div class="loader-progress" id="loader-progress"></div>
+            </div>
+            <p class="loader-text" id="loader-text">Loading assets...</p>
+        </div>
+    </div>
+
+    <div id="game-container">
+        <canvas id="game-canvas"></canvas>
+
+        <!-- HUD -->
+        <div id="hud" class="hidden">
+            <div class="hud-top">
+                <div class="timer-container">
+                    <div class="current-time" id="current-time">00:00.000</div>
+                    <div class="best-time" id="best-time">BEST: --:--.---</div>
+                </div>
+                <div class="lap-counter" id="lap-counter">LAP 1/3</div>
+            </div>
+            <div class="hud-bottom">
+                <div class="speed-container">
+                    <div class="speed-value" id="speed-value">0</div>
+                    <div class="speed-unit">KM/H</div>
+                </div>
+            </div>
+            <div class="checkpoint-flash hidden" id="checkpoint-flash">CHECKPOINT</div>
+        </div>
+
+        <!-- Main Menu -->
+        <div id="main-menu" class="menu-screen">
+            <div class="menu-background"></div>
+            <div class="menu-content">
+                <h1 class="menu-title">POLY RACER</h1>
+                <div class="menu-buttons">
+                    <button class="menu-btn primary" id="btn-play">PLAY</button>
+                    <button class="menu-btn" id="btn-tracks">SELECT TRACK</button>
+                    <button class="menu-btn" id="btn-customize">CUSTOMIZE</button>
+                    <button class="menu-btn" id="btn-controls">CONTROLS</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Track Selection -->
+        <div id="track-menu" class="menu-screen hidden">
+            <div class="menu-background"></div>
+            <div class="menu-content">
+                <h2 class="menu-subtitle">SELECT TRACK</h2>
+                <div class="track-grid" id="track-grid">
+                    <!-- Tracks populated by JS -->
+                </div>
+                <button class="menu-btn back-btn" id="btn-back-tracks">BACK</button>
+            </div>
+        </div>
+
+        <!-- Customize Menu -->
+        <div id="customize-menu" class="menu-screen hidden">
+            <div class="menu-background"></div>
+            <div class="menu-content">
+                <h2 class="menu-subtitle">CUSTOMIZE</h2>
+                <div class="color-picker">
+                    <label>CAR COLOR</label>
+                    <div class="color-options" id="color-options">
+                        <div class="color-option selected" data-color="#ff3366"></div>
+                        <div class="color-option" data-color="#33ff66"></div>
+                        <div class="color-option" data-color="#3366ff"></div>
+                        <div class="color-option" data-color="#ffff33"></div>
+                        <div class="color-option" data-color="#ff6633"></div>
+                        <div class="color-option" data-color="#33ffff"></div>
+                        <div class="color-option" data-color="#ff33ff"></div>
+                        <div class="color-option" data-color="#ffffff"></div>
+                    </div>
+                </div>
+                <button class="menu-btn back-btn" id="btn-back-customize">BACK</button>
+            </div>
+        </div>
+
+        <!-- Controls Menu -->
+        <div id="controls-menu" class="menu-screen hidden">
+            <div class="menu-background"></div>
+            <div class="menu-content">
+                <h2 class="menu-subtitle">CONTROLS</h2>
+                <div class="controls-list">
+                    <div class="control-item">
+                        <span class="control-key">W / ↑</span>
+                        <span class="control-action">Accelerate</span>
+                    </div>
+                    <div class="control-item">
+                        <span class="control-key">S / ↓</span>
+                        <span class="control-action">Brake / Reverse</span>
+                    </div>
+                    <div class="control-item">
+                        <span class="control-key">A / ←</span>
+                        <span class="control-action">Steer Left</span>
+                    </div>
+                    <div class="control-item">
+                        <span class="control-key">D / →</span>
+                        <span class="control-action">Steer Right</span>
+                    </div>
+                    <div class="control-item">
+                        <span class="control-key">SPACE</span>
+                        <span class="control-action">Drift / Handbrake</span>
+                    </div>
+                    <div class="control-item">
+                        <span class="control-key">R</span>
+                        <span class="control-action">Reset to Checkpoint</span>
+                    </div>
+                    <div class="control-item">
+                        <span class="control-key">ENTER</span>
+                        <span class="control-action">Quick Restart</span>
+                    </div>
+                    <div class="control-item">
+                        <span class="control-key">C</span>
+                        <span class="control-action">Change Camera</span>
+                    </div>
+                    <div class="control-item">
+                        <span class="control-key">ESC</span>
+                        <span class="control-action">Pause Menu</span>
+                    </div>
+                </div>
+                <button class="menu-btn back-btn" id="btn-back-controls">BACK</button>
+            </div>
+        </div>
+
+        <!-- Pause Menu -->
+        <div id="pause-menu" class="menu-screen hidden">
+            <div class="menu-background"></div>
+            <div class="menu-content">
+                <h2 class="menu-subtitle">PAUSED</h2>
+                <div class="menu-buttons">
+                    <button class="menu-btn primary" id="btn-resume">RESUME</button>
+                    <button class="menu-btn" id="btn-restart">RESTART</button>
+                    <button class="menu-btn" id="btn-quit">QUIT TO MENU</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Screen -->
+        <div id="results-screen" class="menu-screen hidden">
+            <div class="menu-background"></div>
+            <div class="menu-content">
+                <h2 class="menu-subtitle" id="results-title">RACE COMPLETE!</h2>
+                <div class="results-times">
+                    <div class="result-time">
+                        <span class="result-label">YOUR TIME</span>
+                        <span class="result-value" id="result-time">00:00.000</span>
+                    </div>
+                    <div class="result-time">
+                        <span class="result-label">BEST TIME</span>
+                        <span class="result-value" id="result-best">00:00.000</span>
+                    </div>
+                    <div class="result-time new-record hidden" id="new-record">
+                        <span class="result-label">★ NEW RECORD! ★</span>
+                    </div>
+                </div>
+                <div class="menu-buttons">
+                    <button class="menu-btn primary" id="btn-retry">RETRY</button>
+                    <button class="menu-btn" id="btn-results-menu">MAIN MENU</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Countdown -->
+        <div id="countdown" class="hidden">
+            <div class="countdown-number" id="countdown-number">3</div>
+        </div>
+
+        <!-- Mobile Controls -->
+        <div id="mobile-controls" class="hidden">
+            <div class="mobile-left">
+                <button class="mobile-btn" id="mobile-left">◀</button>
+            </div>
+            <div class="mobile-right">
+                <button class="mobile-btn" id="mobile-right">▶</button>
+            </div>
+            <div class="mobile-pedals">
+                <button class="mobile-btn gas" id="mobile-gas">▲</button>
+                <button class="mobile-btn brake" id="mobile-brake">▼</button>
+            </div>
+            <button class="mobile-btn drift" id="mobile-drift">DRIFT</button>
+        </div>
+    </div>
+
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"
+        }
+    }
+    </script>
+    <script type="module" src="js/main.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,139 @@
+{
+    "name": "Mountain Rise",
+    "difficulty": "Medium",
+    "laps": 2,
+    "description": "Elevation changes and tighter corners.",
+    "pieces": [
+        {
+            "type": "checkpoint",
+            "isFinish": true
+        },
+        {
+            "type": "straight",
+            "length": 25,
+            "width": 9
+        },
+        {
+            "type": "ramp",
+            "length": 30,
+            "width": 9,
+            "heightChange": 5
+        },
+        {
+            "type": "checkpoint"
+        },
+        {
+            "type": "straight",
+            "length": 20,
+            "width": 9
+        },
+        {
+            "type": "curve",
+            "radius": 18,
+            "angle": 1.57,
+            "width": 9
+        },
+        {
+            "type": "boost",
+            "length": 12,
+            "width": 9
+        },
+        {
+            "type": "straight",
+            "length": 25,
+            "width": 9
+        },
+        {
+            "type": "ramp",
+            "length": 20,
+            "width": 9,
+            "heightChange": 3
+        },
+        {
+            "type": "jump",
+            "length": 30,
+            "width": 9,
+            "jumpHeight": 4
+        },
+        {
+            "type": "checkpoint"
+        },
+        {
+            "type": "curve",
+            "radius": 22,
+            "angle": -1.2,
+            "width": 9
+        },
+        {
+            "type": "straight",
+            "length": 35,
+            "width": 9
+        },
+        {
+            "type": "curve",
+            "radius": 15,
+            "angle": 2.0,
+            "width": 9
+        },
+        {
+            "type": "checkpoint"
+        },
+        {
+            "type": "ramp",
+            "length": 25,
+            "width": 9,
+            "heightChange": -8
+        },
+        {
+            "type": "boost",
+            "length": 15,
+            "width": 9
+        },
+        {
+            "type": "straight",
+            "length": 30,
+            "width": 9
+        },
+        {
+            "type": "curve",
+            "radius": 20,
+            "angle": 1.3,
+            "width": 9
+        },
+        {
+            "type": "straight",
+            "length": 20,
+            "width": 9
+        }
+    ],
+    "decorations": [
+        {
+            "x": -25,
+            "z": 20
+        },
+        {
+            "x": 30,
+            "z": 50
+        },
+        {
+            "x": -20,
+            "z": 90
+        },
+        {
+            "x": 45,
+            "z": 110
+        },
+        {
+            "x": -35,
+            "z": 140
+        },
+        {
+            "x": 55,
+            "z": 80
+        },
+        {
+            "x": 10,
+            "z": 160
+        }
+    ]
+}
