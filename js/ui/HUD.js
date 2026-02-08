@@ -2,7 +2,7 @@
  * HUD - In-game heads-up display
  */
 
-import { Timer } from './Timer.js';
+import { Timer } from '../game/RaceTimer.js';
 
 export class HUD {
     constructor() {

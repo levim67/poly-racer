@@ -3,7 +3,7 @@
  * Handles all menu screens and navigation
  */
 
-import { Timer } from '../game/Timer.js';
+import { Timer } from '../game/RaceTimer.js';
 
 export class Menu {
     constructor() {
