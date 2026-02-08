@@ -57,21 +57,25 @@ export class SplineTrackBuilder {
         };
 
         const roadGeo = new THREE.ExtrudeGeometry(shape, extrudeSettings);
+
+        // Poly Track style: Bright grey road
         const road = new THREE.Mesh(roadGeo, new THREE.MeshLambertMaterial({
-            color: 0x050505, // Almost black
-            emissive: 0x000000,
-            flatShading: true
+            color: 0xdddddd,   // Light grey (Poly Track style)
+            flatShading: true,
+            side: THREE.DoubleSide  // Visible from both sides
         }));
 
-        // Neon Edges
-        // Create a wireframe helper for the road
-        // We only want edges on the sides, not the internal segments if possible, 
-        // but EdgesGeometry with thresholdAngle might work.
-        const edges = new THREE.EdgesGeometry(roadGeo, 15);
+        // CRITICAL: Update matrix for raycasting to work
+        road.updateMatrixWorld(true);
+
+        // Add to scene group
+        this.trackGroup.add(road);
+
+        // Road Edges (White stripes like Poly Track)
+        const edges = new THREE.EdgesGeometry(roadGeo, 30);
         const line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({
-            color: 0x00ffff,
-            transparent: true,
-            opacity: 0.4
+            color: 0xffffff,
+            linewidth: 2
         }));
         this.trackGroup.add(line);
 
@@ -86,9 +90,8 @@ export class SplineTrackBuilder {
         // Calculate interaction with Up vector to find rotation
         this.spawnRotation = Math.atan2(startTangent.x, startTangent.z);
 
-        // Add Physics Mesh
+        // Add Physics Mesh (AFTER matrix update)
         this.collision.addTrackMesh(road);
-        this.trackGroup.add(road);
 
         // 4. Add Checkpoints
         this.checkpointCount = 0;

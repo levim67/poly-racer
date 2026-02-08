@@ -30,7 +30,7 @@ export class Renderer {
 
         this.renderer.setPixelRatio(this.pixelRatio);
         this.renderer.setSize(window.innerWidth, window.innerHeight);
-        this.renderer.setClearColor(0x0a0a2a); // Deep Neon Blue
+        this.renderer.setClearColor(0x87CEEB); // Sky Blue (Poly Track style)
         this.renderer.shadowMap.enabled = this.shadowsEnabled;
         this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
@@ -41,7 +41,7 @@ export class Renderer {
         // Create scene
         this.scene = new THREE.Scene();
 
-        // Add fog for depth
+        // Add fog for depth (match sky color)
         this.scene.fog = new THREE.Fog(0x87CEEB, 100, 800);
 
         // Setup lighting
@@ -88,7 +88,7 @@ export class Renderer {
 
     setupLighting() {
         // Ambient light
-        const ambient = new THREE.AmbientLight(0xffffff, 0.6); // Adjusted ambient intensity
+        const ambient = new THREE.AmbientLight(0xffffff, 0.8); // Bright ambient for visibility
         this.scene.add(ambient);
 
         // Main directional light (sun)
