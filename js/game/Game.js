@@ -16,7 +16,7 @@ export class Game {
 
         // Race state
         this.timer = new Timer();
-        this.currentCheckpoint = 0;
+        this.currentCheckpoint = 1; // Start looking for first checkpoint (skip start line)
         this.totalCheckpoints = 0;
         this.lastCheckpointPosition = null;
         this.lastCheckpointRotation = 0;
@@ -82,7 +82,7 @@ export class Game {
         this.timer.totalLaps = this.currentTrack?.laps || 1;
 
         // Reset checkpoints
-        this.currentCheckpoint = 0;
+        this.currentCheckpoint = 1; // Skip start line
         this.lastCheckpointPosition = this.spawnPosition.clone();
         this.lastCheckpointRotation = this.spawnRotation;
 
@@ -164,7 +164,7 @@ export class Game {
         // Check boost pads
         const boost = this.collision.checkBoostPad(this.physics.position);
         if (boost.hit) {
-            this.physics.applyBoost(1.5);
+            this.physics.applyBoost(1.2); // Reduced from 1.5
             if (this.onBoost) this.onBoost();
         }
 
@@ -196,8 +196,12 @@ export class Game {
     }
 
     handleCheckpoint(checkpoint) {
-        // Must hit checkpoints in order
-        if (checkpoint.index !== this.currentCheckpoint) return;
+        // Must hit checkpoints in order (with wrapping)
+        // If total is 0 (no checkpoints), ignore
+        if (this.totalCheckpoints === 0) return;
+
+        const expectedIndex = this.currentCheckpoint % this.totalCheckpoints;
+        if (checkpoint.index !== expectedIndex) return;
 
         // Save checkpoint
         this.lastCheckpointPosition = this.physics.position.clone();

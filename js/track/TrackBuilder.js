@@ -15,8 +15,10 @@ export class TrackBuilder {
 
         // Materials
         this.roadMaterial = this.createRoadMaterial();
-        this.barrierMaterial = renderer.createMaterial(0x666666);
-        this.boostMaterial = renderer.createEmissiveMaterial(0x00ffaa, 0.8);
+        this.barrierMaterial = renderer.createMaterial(0x111122); // Darker barrier
+        this.curbMaterial = renderer.createMaterial(0xcc0000); // Red curb
+        this.curbMaterial2 = renderer.createMaterial(0xffffff); // White curb
+        this.boostMaterial = renderer.createEmissiveMaterial(0x00ffff, 0.8); // Cyan boost
         this.checkpointMaterial = renderer.createEmissiveMaterial(0xffff00, 0.3);
         this.finishMaterial = renderer.createEmissiveMaterial(0xffffff, 0.5);
 
@@ -28,7 +30,7 @@ export class TrackBuilder {
 
     createRoadMaterial() {
         return new THREE.MeshLambertMaterial({
-            color: 0x444455,
+            color: 0x555566, // Lighter road
             flatShading: true
         });
     }
@@ -143,6 +145,9 @@ export class TrackBuilder {
 
         this.trackGroup.add(road);
         this.collision.addTrackMesh(road);
+
+        // Curbs
+        this.addCurbs(pos, dir, length, width, height);
 
         // Barriers
         this.addBarriers(pos, dir, length, width, height);
@@ -291,6 +296,23 @@ export class TrackBuilder {
 
         this.trackGroup.add(boost);
 
+        // Decorations (Chevrons)
+        const arrowGeo = new THREE.PlaneGeometry(width * 0.4, length * 0.15);
+        // Create 3 arrows
+        for (let i = 0; i < 3; i++) {
+            const arrow = new THREE.Mesh(arrowGeo, this.finishMaterial); // Bright white
+            const offset = (i - 1) * (length * 0.25);
+
+            arrow.rotation.x = -Math.PI / 2;
+            arrow.rotation.z = -dir;
+            arrow.position.set(
+                pos.x + Math.sin(dir) * (length / 2 + offset),
+                height + 0.03,
+                pos.z + Math.cos(dir) * (length / 2 + offset)
+            );
+            this.trackGroup.add(arrow);
+        }
+
         // Add boost zone to collision
         const boostPos = new THREE.Vector3(
             pos.x + Math.sin(dir) * length / 2,
@@ -344,15 +366,39 @@ export class TrackBuilder {
         this.collision.addCheckpoint(cpPos, cpSize, index, isFinish);
     }
 
+    addCurbs(pos, dir, length, width, height) {
+        const curbGeo = new THREE.BoxGeometry(0.5, 0.1, length);
+
+        // Left Curb
+        const leftCurb = new THREE.Mesh(curbGeo, this.curbMaterial);
+        leftCurb.position.set(
+            pos.x + Math.sin(dir) * length / 2 + Math.cos(dir) * (width / 2 + 0.25),
+            height + 0.05,
+            pos.z + Math.cos(dir) * length / 2 - Math.sin(dir) * (width / 2 + 0.25)
+        );
+        leftCurb.rotation.y = -dir;
+        this.trackGroup.add(leftCurb);
+
+        // Right Curb
+        const rightCurb = new THREE.Mesh(curbGeo, this.curbMaterial2);
+        rightCurb.position.set(
+            pos.x + Math.sin(dir) * length / 2 - Math.cos(dir) * (width / 2 + 0.25),
+            height + 0.05,
+            pos.z + Math.cos(dir) * length / 2 + Math.sin(dir) * (width / 2 + 0.25)
+        );
+        rightCurb.rotation.y = -dir;
+        this.trackGroup.add(rightCurb);
+    }
+
     addBarriers(pos, dir, length, width, height) {
         const barrierGeo = new THREE.BoxGeometry(0.3, 0.8, length);
 
         // Left barrier
         const leftBarrier = new THREE.Mesh(barrierGeo, this.barrierMaterial);
         leftBarrier.position.set(
-            pos.x + Math.sin(dir) * length / 2 + Math.cos(dir) * (width / 2 + 0.15),
+            pos.x + Math.sin(dir) * length / 2 + Math.cos(dir) * (width / 2 + 0.8), // Moved out by 0.65
             height + 0.4,
-            pos.z + Math.cos(dir) * length / 2 - Math.sin(dir) * (width / 2 + 0.15)
+            pos.z + Math.cos(dir) * length / 2 - Math.sin(dir) * (width / 2 + 0.8)
         );
         leftBarrier.rotation.y = -dir;
         leftBarrier.castShadow = true;
@@ -362,9 +408,9 @@ export class TrackBuilder {
         // Right barrier
         const rightBarrier = new THREE.Mesh(barrierGeo, this.barrierMaterial);
         rightBarrier.position.set(
-            pos.x + Math.sin(dir) * length / 2 - Math.cos(dir) * (width / 2 + 0.15),
+            pos.x + Math.sin(dir) * length / 2 - Math.cos(dir) * (width / 2 + 0.8), // Moved out
             height + 0.4,
-            pos.z + Math.cos(dir) * length / 2 + Math.sin(dir) * (width / 2 + 0.15)
+            pos.z + Math.cos(dir) * length / 2 + Math.sin(dir) * (width / 2 + 0.8)
         );
         rightBarrier.rotation.y = -dir;
         rightBarrier.castShadow = true;

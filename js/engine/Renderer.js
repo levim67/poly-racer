@@ -30,19 +30,19 @@ export class Renderer {
 
         this.renderer.setPixelRatio(this.pixelRatio);
         this.renderer.setSize(window.innerWidth, window.innerHeight);
-        this.renderer.setClearColor(0x1a1a2e);
+        this.renderer.setClearColor(0x87CEEB); // Sky Blue
         this.renderer.shadowMap.enabled = this.shadowsEnabled;
         this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
         // Tone mapping for better colors
         this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-        this.renderer.toneMappingExposure = 1.2;
+        this.renderer.toneMappingExposure = 1.0;
 
         // Create scene
         this.scene = new THREE.Scene();
 
         // Add fog for depth
-        this.scene.fog = new THREE.Fog(0x1a1a2e, 100, 500);
+        this.scene.fog = new THREE.Fog(0x87CEEB, 100, 800);
 
         // Setup lighting
         this.setupLighting();
@@ -53,11 +53,11 @@ export class Renderer {
 
     setupLighting() {
         // Ambient light
-        const ambient = new THREE.AmbientLight(0x404060, 0.5);
+        const ambient = new THREE.AmbientLight(0xffffff, 0.7); // Brighter ambient
         this.scene.add(ambient);
 
         // Main directional light (sun)
-        const sun = new THREE.DirectionalLight(0xffffff, 1.0);
+        const sun = new THREE.DirectionalLight(0xffffff, 1.3); // Brighter sun
         sun.position.set(50, 100, 50);
         sun.castShadow = true;
         sun.shadow.mapSize.width = 2048;
@@ -73,12 +73,12 @@ export class Renderer {
         this.sun = sun;
 
         // Fill light
-        const fill = new THREE.DirectionalLight(0x6080ff, 0.3);
+        const fill = new THREE.DirectionalLight(0x6080ff, 0.4);
         fill.position.set(-50, 30, -50);
         this.scene.add(fill);
 
         // Hemisphere light for natural feel
-        const hemi = new THREE.HemisphereLight(0x87ceeb, 0x3d5c5c, 0.4);
+        const hemi = new THREE.HemisphereLight(0x87ceeb, 0x3d5c5c, 0.5);
         this.scene.add(hemi);
     }
 
@@ -88,7 +88,7 @@ export class Renderer {
         const skyMaterial = new THREE.ShaderMaterial({
             uniforms: {
                 topColor: { value: new THREE.Color(0x0077ff) },
-                bottomColor: { value: new THREE.Color(0x1a1a2e) },
+                bottomColor: { value: new THREE.Color(0x87CEEB) }, // Match fog
                 offset: { value: 20 },
                 exponent: { value: 0.6 }
             },
@@ -121,7 +121,7 @@ export class Renderer {
         // Create ground plane
         const groundGeometry = new THREE.PlaneGeometry(1000, 1000);
         const groundMaterial = new THREE.MeshLambertMaterial({
-            color: 0x2d4a3e
+            color: 0x66bb6a // Brighter green
         });
         const ground = new THREE.Mesh(groundGeometry, groundMaterial);
         ground.rotation.x = -Math.PI / 2;

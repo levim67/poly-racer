@@ -52,14 +52,14 @@ export class Vehicle {
         const cabinGeo = new THREE.BoxGeometry(1.2, 0.5, 1.5);
         const cabinMat = this.renderer.createMaterial(this.color);
         const cabin = new THREE.Mesh(cabinGeo, cabinMat);
-        cabin.position.set(0, 0.7, 0.2);
+        cabin.position.set(0, 0.7, -0.2); // Z flipped
         cabin.castShadow = true;
         bodyGroup.add(cabin);
 
         // Front hood (angled)
         const hoodGeo = new THREE.BoxGeometry(1.3, 0.3, 0.8);
         const hood = new THREE.Mesh(hoodGeo, chassisMat);
-        hood.position.set(0, 0.45, 1.1);
+        hood.position.set(0, 0.45, -1.1); // Z flipped
         hood.rotation.x = 0.15;
         hood.castShadow = true;
         bodyGroup.add(hood);
@@ -68,17 +68,17 @@ export class Vehicle {
         const spoilerGeo = new THREE.BoxGeometry(1.4, 0.08, 0.3);
         const spoilerMat = this.renderer.createMaterial(0x333333);
         const spoiler = new THREE.Mesh(spoilerGeo, spoilerMat);
-        spoiler.position.set(0, 0.95, -1.2);
+        spoiler.position.set(0, 0.95, 1.2); // Z flipped
         bodyGroup.add(spoiler);
 
         // Spoiler stands
         const standGeo = new THREE.BoxGeometry(0.08, 0.2, 0.08);
         const standL = new THREE.Mesh(standGeo, spoilerMat);
-        standL.position.set(-0.5, 0.85, -1.2);
+        standL.position.set(-0.5, 0.85, 1.2); // Z flipped
         bodyGroup.add(standL);
 
         const standR = new THREE.Mesh(standGeo, spoilerMat);
-        standR.position.set(0.5, 0.85, -1.2);
+        standR.position.set(0.5, 0.85, 1.2); // Z flipped
         bodyGroup.add(standR);
 
         // Windows (dark glass)
@@ -86,13 +86,13 @@ export class Vehicle {
 
         const frontWindowGeo = new THREE.BoxGeometry(1.1, 0.35, 0.05);
         const frontWindow = new THREE.Mesh(frontWindowGeo, windowMat);
-        frontWindow.position.set(0, 0.75, 0.9);
+        frontWindow.position.set(0, 0.75, -0.9); // Z flipped
         frontWindow.rotation.x = 0.3;
         bodyGroup.add(frontWindow);
 
         const rearWindowGeo = new THREE.BoxGeometry(1.1, 0.3, 0.05);
         const rearWindow = new THREE.Mesh(rearWindowGeo, windowMat);
-        rearWindow.position.set(0, 0.75, -0.5);
+        rearWindow.position.set(0, 0.75, 0.5); // Z flipped
         rearWindow.rotation.x = -0.3;
         bodyGroup.add(rearWindow);
 
@@ -106,10 +106,10 @@ export class Vehicle {
         const rimMat = this.renderer.createMaterial(0x888888);
 
         const wheelPositions = [
-            { x: -0.7, y: 0.3, z: 1.0 },   // Front left
-            { x: 0.7, y: 0.3, z: 1.0 },    // Front right
-            { x: -0.7, y: 0.3, z: -1.0 },  // Rear left
-            { x: 0.7, y: 0.3, z: -1.0 }    // Rear right
+            { x: -0.7, y: 0.3, z: -1.0 },   // Front left (Z flipped)
+            { x: 0.7, y: 0.3, z: -1.0 },    // Front right (Z flipped)
+            { x: -0.7, y: 0.3, z: 1.0 },  // Rear left (Z flipped)
+            { x: 0.7, y: 0.3, z: 1.0 }    // Rear right (Z flipped)
         ];
 
         wheelPositions.forEach((pos, i) => {
@@ -145,11 +145,11 @@ export class Vehicle {
         const headlightMat = this.renderer.createEmissiveMaterial(0xffffcc, 1);
 
         const headlightL = new THREE.Mesh(headlightGeo, headlightMat);
-        headlightL.position.set(-0.5, 0.4, 1.5);
+        headlightL.position.set(-0.5, 0.4, -1.5); // Z flipped
         this.group.add(headlightL);
 
         const headlightR = new THREE.Mesh(headlightGeo, headlightMat);
-        headlightR.position.set(0.5, 0.4, 1.5);
+        headlightR.position.set(0.5, 0.4, -1.5); // Z flipped
         this.group.add(headlightR);
 
         // Taillights
@@ -157,11 +157,11 @@ export class Vehicle {
         const taillightMat = this.renderer.createEmissiveMaterial(0xff0000, 0.8);
 
         const taillightL = new THREE.Mesh(taillightGeo, taillightMat);
-        taillightL.position.set(-0.5, 0.4, -1.5);
+        taillightL.position.set(-0.5, 0.4, 1.5); // Z flipped
         this.group.add(taillightL);
 
         const taillightR = new THREE.Mesh(taillightGeo, taillightMat);
-        taillightR.position.set(0.5, 0.4, -1.5);
+        taillightR.position.set(0.5, 0.4, 1.5); // Z flipped
         this.group.add(taillightR);
     }
 
@@ -172,12 +172,12 @@ export class Vehicle {
 
         const exhaustL = new THREE.Mesh(exhaustGeo, exhaustMat);
         exhaustL.rotation.x = Math.PI / 2;
-        exhaustL.position.set(-0.3, 0.15, -1.55);
+        exhaustL.position.set(-0.3, 0.15, 1.55); // Z flipped
         this.group.add(exhaustL);
 
         const exhaustR = new THREE.Mesh(exhaustGeo, exhaustMat);
         exhaustR.rotation.x = Math.PI / 2;
-        exhaustR.position.set(0.3, 0.15, -1.55);
+        exhaustR.position.set(0.3, 0.15, 1.55); // Z flipped
         this.group.add(exhaustR);
     }
 
