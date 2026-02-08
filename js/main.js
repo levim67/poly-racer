@@ -24,24 +24,19 @@ import { Vehicle } from './game/Vehicle.js';
 import { GhostCar } from './game/GhostCar.js';
 
 // Track
-import { TrackBuilder } from './track/TrackBuilder.js';
+import { SplineTrackBuilder } from './track/SplineTrackBuilder.js';
 
 // UI
 import { HUD } from './ui/HUD.js';
 import { Menu } from './ui/Menu.js';
+import { SoundManager } from './audio/SoundManager.js';
 
 // Effects
 import { ParticleSystem } from './effects/ParticleSystem.js';
 
 class PolyRacer {
     constructor() {
-        // Get canvas
-        this.canvas = document.getElementById('game-canvas');
-
-        // Core systems
-        this.engine = new Engine(this.canvas);
-        this.renderer = new Renderer(this.canvas);
-        this.inputManager = new InputManager();
+        // ... (existing code) ...
         this.camera = new Camera();
 
         // Physics
@@ -52,10 +47,13 @@ class PolyRacer {
         this.game = new Game(this.engine);
         this.vehicle = new Vehicle(this.renderer);
         this.ghostCar = new GhostCar(this.renderer);
-        this.trackBuilder = new TrackBuilder(this.renderer, this.collision);
+        this.trackBuilder = new SplineTrackBuilder(this.renderer, this.collision);
 
         // Effects
         this.particles = new ParticleSystem(this.renderer);
+
+        // Audio
+        this.soundManager = new SoundManager();
 
         // UI
         this.hud = new HUD();
@@ -92,6 +90,7 @@ class PolyRacer {
         this.game.ghostCar = this.ghostCar;
         this.game.collision = this.collision;
         this.game.trackBuilder = this.trackBuilder;
+        this.game.soundManager = this.soundManager;
 
         this.updateLoadingProgress(30, 'Loading assets...');
 
@@ -297,8 +296,26 @@ class PolyRacer {
                 rearPos.y = 0.1;
                 const dir = new THREE.Vector3(0, 0.5, 1).applyQuaternion(this.physics.quaternion);
                 this.particles.emitDrift(rearPos, dir);
+
+                // Smoke
+                this.particles.emitTireSmoke(this.physics.wheelOffsets[2].clone().applyQuaternion(this.physics.quaternion).add(this.physics.position));
+                this.particles.emitTireSmoke(this.physics.wheelOffsets[3].clone().applyQuaternion(this.physics.quaternion).add(this.physics.position));
+
+                // Sound
+                this.soundManager.startDrift();
+            } else {
+                this.soundManager.stopDrift();
             }
+
+            // Engine sound
+            const speedRatio = Math.min(Math.abs(this.physics.speed) / this.physics.config.maxSpeed, 1);
+            this.soundManager.updateEngine(speedRatio);
+            this.soundManager.startEngine(); // Ensure it's running
+        } else {
+            // Stop drift sound if not playing
+            this.soundManager.stopDrift();
         }
+
 
         // Update particles
         this.particles.update(deltaTime);

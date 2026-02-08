@@ -15,6 +15,7 @@ export class ParticleSystem {
         this.createPool('dust', 50, 0xccaa88, 0.3);
         this.createPool('spark', 30, 0xffaa00, 0.15);
         this.createPool('boost', 20, 0x00ffaa, 0.4);
+        this.createPool('smoke', 100, 0xaaaaaa, 0.5);
     }
 
     createPool(name, count, color, size) {
@@ -30,9 +31,10 @@ export class ParticleSystem {
             color: color,
             size: size,
             transparent: true,
-            opacity: 0.8,
+            opacity: 0.6,
             sizeAttenuation: true,
-            depthWrite: false
+            depthWrite: false,
+            blending: THREE.NormalBlending
         });
 
         const points = new THREE.Points(geometry, material);
@@ -101,8 +103,12 @@ export class ParticleSystem {
                     pool.positions[offset + 1] += pool.velocities[offset + 1] * deltaTime;
                     pool.positions[offset + 2] += pool.velocities[offset + 2] * deltaTime;
 
-                    // Apply gravity
-                    pool.velocities[offset + 1] -= 10 * deltaTime;
+                    // Apply gravity/buoyancy (smoke rises)
+                    if (name === 'smoke') {
+                        pool.velocities[offset + 1] += 2 * deltaTime;
+                    } else {
+                        pool.velocities[offset + 1] -= 10 * deltaTime;
+                    }
 
                     // Reduce lifetime
                     pool.lifetimes[i] -= deltaTime;
@@ -126,6 +132,14 @@ export class ParticleSystem {
      */
     emitDrift(position, direction) {
         this.emit('dust', position, direction, 3, 3, 0.5);
+    }
+
+    /**
+     * Emit tire smoke (for drifting)
+     */
+    emitTireSmoke(position) {
+        // Zero velocity for lingering smoke
+        this.emit('smoke', position, new THREE.Vector3(0, 0.1, 0), 2, 0.5, 1.5);
     }
 
     /**

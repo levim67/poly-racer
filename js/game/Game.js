@@ -32,6 +32,10 @@ export class Game {
         this.isRecordingGhost = false;
         this.currentGhostData = null;
 
+        // Race control
+        this.waitingForStart = false;
+        this.countdownInterval = null;
+
         // Callback
         this.onCheckpoint = null;
         this.onFinish = null;
@@ -72,6 +76,9 @@ export class Game {
      * Reset race to start
      */
     resetRace() {
+        this.stopCountdown();
+        this.waitingForStart = false;
+
         // Reset physics
         if (this.physics) {
             this.physics.reset(this.spawnPosition, this.spawnRotation);
@@ -95,10 +102,20 @@ export class Game {
         this.state = 'ready';
     }
 
+    stopCountdown() {
+        if (this.countdownInterval) {
+            clearInterval(this.countdownInterval);
+            this.countdownInterval = null;
+        }
+        const countdownEl = document.getElementById('countdown');
+        if (countdownEl) countdownEl.classList.add('hidden');
+    }
+
     /**
      * Start countdown
      */
     startCountdown() {
+        this.stopCountdown(); // Ensure clear first
         this.state = 'countdown';
 
         return new Promise(resolve => {
@@ -110,7 +127,7 @@ export class Game {
             countdownEl.classList.remove('hidden');
             numberEl.textContent = count;
 
-            const interval = setInterval(() => {
+            this.countdownInterval = setInterval(() => {
                 count--;
 
                 if (count > 0) {
@@ -125,8 +142,7 @@ export class Game {
                     numberEl.offsetHeight;
                     numberEl.style.animation = null;
                 } else {
-                    clearInterval(interval);
-                    countdownEl.classList.add('hidden');
+                    this.stopCountdown();
                     this.startRace();
                     resolve();
                 }
@@ -139,17 +155,8 @@ export class Game {
      */
     startRace() {
         this.state = 'playing';
-        this.timer.start();
-
-        // Start ghost recording
-        if (this.ghostCar) {
-            this.ghostCar.startRecording();
-
-            // Start playback of best ghost
-            if (this.currentGhostData) {
-                this.ghostCar.startPlayback(this.currentGhostData);
-            }
-        }
+        this.waitingForStart = true;
+        // Timer starts on first input
     }
 
     /**
@@ -158,20 +165,40 @@ export class Game {
     update(deltaTime, input) {
         if (this.state !== 'playing') return;
 
+        // Wait for input to start timer
+        if (this.waitingForStart) {
+            if (input.throttle > 0 || input.brake > 0 || input.steer !== 0) {
+                this.waitingForStart = false;
+                this.timer.start();
+
+                // Start ghost recording/playback now
+                if (this.ghostCar) {
+                    this.ghostCar.startRecording();
+                    if (this.currentGhostData) {
+                        this.ghostCar.startPlayback(this.currentGhostData);
+                    }
+                }
+            } else {
+                return; // Wait
+            }
+        }
+
         // Update timer
         this.timer.update();
 
         // Check boost pads
         const boost = this.collision.checkBoostPad(this.physics.position);
         if (boost.hit) {
-            this.physics.applyBoost(1.2); // Reduced from 1.5
+            this.physics.applyBoost(1.2);
             if (this.onBoost) this.onBoost();
+            if (this.soundManager) this.soundManager.playBoost(); // Direct call
         }
 
         // Check checkpoints
         const checkpoint = this.collision.checkCheckpoint(this.physics.position);
         if (checkpoint.hit) {
             this.handleCheckpoint(checkpoint);
+            if (this.soundManager) this.soundManager.playCheckpoint(); // Direct call
         }
 
         // Record ghost

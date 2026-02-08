@@ -43,9 +43,9 @@ export class VehiclePhysics {
             gripRear: 0.90,
 
             // Suspension
-            suspensionHeight: 0.5,
-            suspensionStiffness: 25,    // Stiffer suspension
-            suspensionDamping: 5,
+            suspensionHeight: 0.4,      // Lowered to fix floating look
+            suspensionStiffness: 30,    // Stiffer suspension
+            suspensionDamping: 6,
 
             // Gravity
             gravity: -30,
@@ -98,8 +98,8 @@ export class VehiclePhysics {
         const steer = input.steer;
         const drift = input.drift;
 
-        // Ground check
-        this.updateGroundState(trackCollision);
+        // 1. Suspension & Ground Check
+        this.updateSuspension(trackCollision, deltaTime);
 
         if (this.isGrounded) {
             this.updateGroundedPhysics(throttle, brake, steer, drift, deltaTime);
@@ -110,10 +110,13 @@ export class VehiclePhysics {
         // Apply velocity
         this.position.add(this.velocity.clone().multiplyScalar(deltaTime));
 
+        // Apply rotation
+        this.rotation.setFromQuaternion(this.quaternion);
+
         // Update bounding box
         this.updateBoundingBox();
 
-        // Calculate speed in km/h for display
+        // Calculate speed in km/h
         const forwardDir = new THREE.Vector3(0, 0, -1).applyQuaternion(this.quaternion);
         this.speed = this.velocity.dot(forwardDir);
     }
@@ -158,7 +161,14 @@ export class VehiclePhysics {
         this.steerAngle += (targetSteer - this.steerAngle) * cfg.steerSpeed * dt;
 
         // --- DRIFTING ---
-        if (drift && Math.abs(forwardSpeed) > 10) {
+        // Poly Track style: Turn + Brake = Drift
+        const isTurning = Math.abs(steer) > 0.5;
+        const isBraking = brake > 0;
+        const isFastEnough = Math.abs(forwardSpeed) > 10;
+
+        const shouldDrift = drift || (isTurning && isBraking && isFastEnough);
+
+        if (shouldDrift) {
             this.isDrifting = true;
             this.driftFactor = Math.min(this.driftFactor + dt * 3, 1);
         } else {
@@ -190,6 +200,13 @@ export class VehiclePhysics {
         this.velocity.copy(forward.multiplyScalar(forwardSpeed));
         this.velocity.add(right.multiplyScalar(lateralSpeed));
 
+        // --- ARTIFICIAL GRAVITY (STICK TO TRACK) ---
+        // Pull towards the ground normal (allows loops/wall driving)
+        // gravity is negative (-30), so we multiply by Normal to get Downward force relative to surface?
+        // Wait, Normal is Up. We want Down. So Normal * Gravity (negative) is correct.
+        const gravityVector = this.groundNormal.clone().multiplyScalar(cfg.gravity * dt);
+        this.velocity.add(gravityVector);
+
         // Align to ground
         this.alignToGround(dt);
     }
@@ -205,41 +222,57 @@ export class VehiclePhysics {
         this.quaternion.setFromEuler(this.rotation);
     }
 
-    updateGroundState(trackCollision) {
-        // Simple ground check - ray downward
-        const rayStart = this.position.clone();
-        rayStart.y += 1;
+    updateSuspension(trackCollision, dt) {
+        let groundedWheels = 0;
+        let avgNormal = new THREE.Vector3(0, 0, 0);
 
-        if (trackCollision) {
-            const hit = trackCollision.raycast(rayStart, new THREE.Vector3(0, -1, 0), 3);
-            if (hit) {
-                this.isGrounded = true;
-                this.groundHeight = hit.point.y;
-                this.groundNormal.copy(hit.normal);
+        // Down direction relative to car
+        const down = new THREE.Vector3(0, -1, 0).applyQuaternion(this.quaternion);
 
-                // Keep car on ground
-                const targetY = this.groundHeight + this.config.suspensionHeight;
-                const diff = targetY - this.position.y;
+        this.wheelOffsets.forEach(offset => {
+            // Get wheel world position
+            const wheelPos = offset.clone().applyQuaternion(this.quaternion).add(this.position);
+            const rayStart = wheelPos.clone().add(this.quaternion.clone().multiply(new THREE.Vector3(0, 0.5, 0))); // Start slightly up
 
-                this.velocity.y += diff * this.config.suspensionStiffness;
-                this.velocity.y *= 1 - this.config.suspensionDamping * 0.016;
+            if (trackCollision) {
+                // Cast ray down
+                // Max distance = offset (0.5) + suspension height (0.4) + extra (0.2)
+                const hit = trackCollision.raycast(rayStart, down, 1.1);
 
-                return;
+                if (hit) {
+                    groundedWheels++;
+                    avgNormal.add(hit.normal);
+
+                    // Suspension Force
+                    // Compression = 1 - (distance / restLength)
+                    const distance = hit.distance;
+                    const restLength = 0.5 + this.config.suspensionHeight;
+
+                    if (distance < restLength) {
+                        const compression = 1 - (distance / restLength);
+                        const forceVal = compression * this.config.suspensionStiffness;
+
+                        // Apply force 
+                        // Simplified: Add to velocity in direction of normal
+                        // Dampening
+                        const damp = this.velocity.dot(hit.normal) * this.config.suspensionDamping;
+                        const totalForce = (forceVal - damp) * dt;
+
+                        this.velocity.add(hit.normal.clone().multiplyScalar(totalForce));
+                    }
+                }
             }
-        }
+        });
 
-        // Fallback - simple ground plane
-        if (this.position.y <= this.config.suspensionHeight) {
+        if (groundedWheels > 0) {
             this.isGrounded = true;
-            this.groundHeight = 0;
-            this.groundNormal.set(0, 1, 0);
+            this.groundNormal.copy(avgNormal.divideScalar(groundedWheels).normalize());
 
-            if (this.velocity.y < 0) {
-                this.velocity.y = 0;
-            }
-            this.position.y = this.config.suspensionHeight;
+            // Align car to ground (Stabilizer)
+            this.alignToGround(dt);
         } else {
             this.isGrounded = false;
+            // Don't reset ground normal immediately to avoid snapping
         }
     }
 

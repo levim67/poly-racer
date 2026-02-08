@@ -66,7 +66,7 @@ export class TrackBuilder {
 
         return {
             spawnPosition: this.spawnPosition,
-            spawnRotation: this.spawnRotation,
+            spawnRotation: Math.PI, // Face forward (away from camera default)
             checkpointCount: this.checkpointCount
         };
     }

@@ -155,13 +155,14 @@ export class InputManager {
         }
         this.input.steer = Math.max(-1, Math.min(1, steer));
 
-        // Drift
-        this.input.drift = this.keys['Space'] || this.touches.drift || this.gamepadState.drift;
+        // Drift (Logic handled in physics now, but keeping mobile/gamepad explicit button as option?)
+        // User asked for "turn + s", removing dedicated drift button for keyboard.
+        this.input.drift = this.touches.drift || this.gamepadState.drift;
 
-        // Action buttons (just pressed)
+        // Action buttons
         this.input.reset = this.keysJustPressed['KeyR'];
         this.input.restart = this.keysJustPressed['Enter'] || this.gamepadState.restart;
-        this.input.pause = this.keysJustPressed['Escape'];
+        this.input.pause = this.keysJustPressed['Escape'] || this.keysJustPressed['Space'];
         this.input.cameraToggle = this.keysJustPressed['KeyC'];
 
         // Fire callbacks

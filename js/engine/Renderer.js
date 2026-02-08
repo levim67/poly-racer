@@ -30,7 +30,7 @@ export class Renderer {
 
         this.renderer.setPixelRatio(this.pixelRatio);
         this.renderer.setSize(window.innerWidth, window.innerHeight);
-        this.renderer.setClearColor(0x87CEEB); // Sky Blue
+        this.renderer.setClearColor(0x0a0a2a); // Deep Neon Blue
         this.renderer.shadowMap.enabled = this.shadowsEnabled;
         this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
@@ -88,7 +88,7 @@ export class Renderer {
 
     setupLighting() {
         // Ambient light
-        const ambient = new THREE.AmbientLight(0xffffff, 0.7); // Brighter ambient
+        const ambient = new THREE.AmbientLight(0xffffff, 0.6); // Adjusted ambient intensity
         this.scene.add(ambient);
 
         // Main directional light (sun)
@@ -154,9 +154,9 @@ export class Renderer {
         this.sky = sky;
 
         // Create ground plane
-        const groundGeometry = new THREE.PlaneGeometry(1000, 1000);
+        const groundGeometry = new THREE.PlaneGeometry(2000, 2000); // Larger ground
         const groundMaterial = new THREE.MeshLambertMaterial({
-            color: 0x66bb6a // Brighter green
+            color: 0x1a1a2e // Dark background for Poly Track style
         });
         const ground = new THREE.Mesh(groundGeometry, groundMaterial);
         ground.rotation.x = -Math.PI / 2;
@@ -164,6 +164,13 @@ export class Renderer {
         ground.receiveShadow = true;
         this.scene.add(ground);
         this.ground = ground;
+
+        // Add Grid Helper (Poly Track style)
+        const grid = new THREE.GridHelper(2000, 50, 0xffffff, 0xffffff);
+        grid.position.y = -0.48; // Slightly above ground
+        grid.material.opacity = 0.1;
+        grid.material.transparent = true;
+        this.scene.add(grid);
     }
 
     /**
