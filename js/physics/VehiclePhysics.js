@@ -28,28 +28,26 @@ export class VehiclePhysics {
             reverseMaxSpeed: 20,        // m/s
 
             // Steering
-            maxSteerAngle: 0.8,         // radians
-            steerSpeed: 5,              // faster steering response
-            steerSpeedFactor: 0.7,      // reduce steering at high speed
+            maxSteerAngle: 0.6,         // radians (~35 degrees)
+            steerSpeed: 4,              // Slower, weightier steering
+            steerSpeedFactor: 0.5,      // reduce steering at high speed
 
-            // Drifting
-            driftFriction: 0.96,        // higher grip while drifting
-            normalFriction: 0.98,
-            driftSteerMultiplier: 1.2,
-            driftSpeedBoost: 1.1,
+            // Grip / Tire Model
+            normalFriction: 1.1,        // Baseline grip
+            tireStiffness: 15.0,        // Cornering stiffness
+            slipLimit: 0.3,             // Peak slip angle
 
-            // Grip
-            gripFront: 0.98,
-            gripRear: 0.90,
+            // Aerodynamics
+            downforce: 1.5,             // Aero grip multiplier
 
             // Suspension
-            suspensionHeight: 0.4,      // Lowered to fix floating look
-            suspensionStiffness: 30,    // Stiffer suspension
-            suspensionDamping: 6,
+            suspensionHeight: 0.4,
+            suspensionStiffness: 40,    // Stiffer for racing
+            suspensionDamping: 8,       // Higher damping
 
             // Gravity
-            gravity: -30,
-            airControl: 0.3
+            gravity: -40,               // Stronger gravity for weight
+            airControl: 0.1             // Very little air control (Realism)
         };
 
         // Current state
@@ -124,11 +122,11 @@ export class VehiclePhysics {
     updateGroundedPhysics(throttle, brake, steer, drift, dt) {
         const cfg = this.config;
 
-        // Get forward direction
+        // Get local velocity
         const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(this.quaternion);
         const right = new THREE.Vector3(1, 0, 0).applyQuaternion(this.quaternion);
+        const up = new THREE.Vector3(0, 1, 0).applyQuaternion(this.quaternion);
 
-        // Current speed along forward axis
         let forwardSpeed = this.velocity.dot(forward);
         let lateralSpeed = this.velocity.dot(right);
 
@@ -148,66 +146,88 @@ export class VehiclePhysics {
             }
         }
 
-        // Natural deceleration
+        // Natural deceleration (rolling resistance + drag)
         if (throttle === 0 && brake === 0) {
-            forwardSpeed *= 0.995;
+            forwardSpeed -= forwardSpeed * 0.5 * dt;
         }
 
         // --- STEERING ---
+        // Speed sensitive steering
         const speedFactor = 1 - Math.min(Math.abs(forwardSpeed) / cfg.maxSpeed, 1) * cfg.steerSpeedFactor;
         const targetSteer = steer * cfg.maxSteerAngle * speedFactor;
 
         // Smooth steering
         this.steerAngle += (targetSteer - this.steerAngle) * cfg.steerSpeed * dt;
 
-        // --- DRIFTING ---
-        // Poly Track style: Turn + Brake = Drift
-        const isTurning = Math.abs(steer) > 0.5;
-        const isBraking = brake > 0;
-        const isFastEnough = Math.abs(forwardSpeed) > 10;
+        // --- TIRE FORCE (PACEJKA LITE) ---
+        // Calculate Slip Angle
+        // slip = atan(v_lat / v_long) - steer
+        // We calculate needed lateral force to follow steer, then cap it by grip.
 
-        const shouldDrift = drift || (isTurning && isBraking && isFastEnough);
+        // Desired rotation
+        const wheelBase = 2.5;
+        const ackermannYawRate = (forwardSpeed / wheelBase) * Math.tan(this.steerAngle);
 
-        if (shouldDrift) {
-            this.isDrifting = true;
-            this.driftFactor = Math.min(this.driftFactor + dt * 3, 1);
-        } else {
-            this.driftFactor = Math.max(this.driftFactor - dt * 5, 0);
-            if (this.driftFactor < 0.1) this.isDrifting = false;
-        }
-
-        // Apply steering rotation
-        let turnRate = this.steerAngle * (forwardSpeed / 20);
-
-        if (this.isDrifting) {
-            turnRate *= cfg.driftSteerMultiplier;
-            // Add some counter-steer feel
-            lateralSpeed *= cfg.driftFriction;
-        } else {
-            // Kill lateral velocity (grip)
-            lateralSpeed *= cfg.normalFriction;
-            lateralSpeed *= (1 - Math.min(Math.abs(forwardSpeed) / cfg.maxSpeed, 0.5));
-        }
-
-        // Apply turn
-        this.rotation.y -= turnRate * dt;
+        this.rotation.y += ackermannYawRate * dt;
         this.quaternion.setFromEuler(this.rotation);
 
-        // Reconstruct velocity
-        forward.set(0, 0, -1).applyQuaternion(this.quaternion);
-        right.set(1, 0, 0).applyQuaternion(this.quaternion);
+        // 2. Lateral Friction (Rear Wheels resisting slide)
+        // If we rotate too fast vs vector, we slide.
+        // Vector is updated below by re-projecting.
 
-        this.velocity.copy(forward.multiplyScalar(forwardSpeed));
-        this.velocity.add(right.multiplyScalar(lateralSpeed));
+        // Calculate localized velocity again after rotation
+        const newForward = new THREE.Vector3(0, 0, -1).applyQuaternion(this.quaternion);
+        const newRight = new THREE.Vector3(1, 0, 0).applyQuaternion(this.quaternion);
 
-        // --- ARTIFICIAL GRAVITY (STICK TO TRACK) ---
-        // Pull towards the ground normal (allows loops/wall driving)
-        // gravity is negative (-30), so we multiply by Normal to get Downward force relative to surface?
-        // Wait, Normal is Up. We want Down. So Normal * Gravity (negative) is correct.
-        const gravityVector = this.groundNormal.clone().multiplyScalar(cfg.gravity * dt);
-        this.velocity.add(gravityVector);
+        let vForward = this.velocity.dot(newForward);
+        let vLateral = this.velocity.dot(newRight);
 
-        // Align to ground
+        // Grip Limit
+        // Normal force = 1 (approx mass) * Gravity + Downforce
+        const downforce = Math.abs(forwardSpeed) * 1.5; // Aero
+        const normalForce = 30 + downforce; // 30 is base gravity
+        const maxGrip = normalForce * cfg.normalFriction;
+
+        // Lateral force needed to kill lateral velocity
+        const frictionForce = -vLateral * 10; // Stiffness
+
+        // Cap friction at limit (Slip)
+        let appliedFriction = Math.max(-maxGrip, Math.min(maxGrip, frictionForce));
+
+        // If drifting (E-Brake or Power Oversteer)
+        if (drift) {
+            appliedFriction *= 0.1; // Loss of rear grip
+            this.isDrifting = true;
+        } else if (Math.abs(frictionForce) > maxGrip) {
+            // Sliding naturally
+            this.isDrifting = true;
+            appliedFriction *= 0.8; // Kinetic friction < Static
+        } else {
+            this.isDrifting = false;
+        }
+
+        // Apply Drag
+        forwardSpeed -= 0.1 * dt * (forwardSpeed * forwardSpeed * 0.001); // Air Resistance
+
+        // Reconstruct Velocity
+        this.velocity.copy(newForward.multiplyScalar(vForward));
+        this.velocity.add(newRight.multiplyScalar(vLateral + appliedFriction * dt));
+
+        // --- AERODYNAMICS (DOWNFORCE) ---
+        // Push car down relative to its roof (Down)
+        // This allows upside-down driving if speed is high enough
+        const downDir = new THREE.Vector3(0, -1, 0).applyQuaternion(this.quaternion);
+        // Downforce increases with Square of Speed
+        const aeroForce = downDir.multiplyScalar(Math.abs(forwardSpeed) * forwardSpeed * 0.02 * dt);
+        this.velocity.add(aeroForce);
+
+        // --- GLOBAL GRAVITY ---
+        // Always pulls down world Y (-30)
+        // UNLESS we are in a special "Magnet Zone" (which we aren't).
+        // BUT for loops, we need the Downforce to overcome Gravity.
+        this.velocity.y += cfg.gravity * dt;
+
+        // Align to ground with limits
         this.alignToGround(dt);
     }
 
@@ -225,40 +245,41 @@ export class VehiclePhysics {
     updateSuspension(trackCollision, dt) {
         let groundedWheels = 0;
         let avgNormal = new THREE.Vector3(0, 0, 0);
-
-        // Down direction relative to car
         const down = new THREE.Vector3(0, -1, 0).applyQuaternion(this.quaternion);
 
         this.wheelOffsets.forEach(offset => {
-            // Get wheel world position
             const wheelPos = offset.clone().applyQuaternion(this.quaternion).add(this.position);
-            const rayStart = wheelPos.clone().add(this.quaternion.clone().multiply(new THREE.Vector3(0, 0.5, 0))); // Start slightly up
+            const rayStart = wheelPos.clone().add(this.quaternion.clone().multiply(new THREE.Vector3(0, 0.5, 0)));
 
             if (trackCollision) {
-                // Cast ray down
-                // Max distance = offset (0.5) + suspension height (0.4) + extra (0.2)
-                const hit = trackCollision.raycast(rayStart, down, 1.1);
+                // Cast ray
+                const hit = trackCollision.raycast(rayStart, down, 1.2); // Slightly longer ray
 
                 if (hit) {
                     groundedWheels++;
                     avgNormal.add(hit.normal);
 
-                    // Suspension Force
-                    // Compression = 1 - (distance / restLength)
+                    // Spring
                     const distance = hit.distance;
-                    const restLength = 0.5 + this.config.suspensionHeight;
+                    const restLength = 0.5 + this.config.suspensionHeight; // 0.9
 
                     if (distance < restLength) {
-                        const compression = 1 - (distance / restLength);
-                        const forceVal = compression * this.config.suspensionStiffness;
+                        // Hooke's Law: F = -k * x
+                        const x = restLength - distance; // Compression amount
+                        const forceVal = x * this.config.suspensionStiffness; // k
 
-                        // Apply force 
-                        // Simplified: Add to velocity in direction of normal
-                        // Dampening
-                        const damp = this.velocity.dot(hit.normal) * this.config.suspensionDamping;
-                        const totalForce = (forceVal - damp) * dt;
+                        // Damper: F = -c * v
+                        // Velocity of compression?
+                        // Simple Project velocity onto normal
+                        const vNormal = this.velocity.dot(hit.normal);
+                        const dampVal = vNormal * this.config.suspensionDamping; // c
 
-                        this.velocity.add(hit.normal.clone().multiplyScalar(totalForce));
+                        const totalForce = Math.max(0, forceVal - dampVal);
+
+                        // Apply to car velocity (Impulse)
+                        // F = ma, a = F/m. Assume m=1.
+                        // Impulse = F * dt
+                        this.velocity.add(hit.normal.clone().multiplyScalar(totalForce * dt));
                     }
                 }
             }
@@ -267,12 +288,8 @@ export class VehiclePhysics {
         if (groundedWheels > 0) {
             this.isGrounded = true;
             this.groundNormal.copy(avgNormal.divideScalar(groundedWheels).normalize());
-
-            // Align car to ground (Stabilizer)
-            this.alignToGround(dt);
         } else {
             this.isGrounded = false;
-            // Don't reset ground normal immediately to avoid snapping
         }
     }
 
@@ -288,8 +305,8 @@ export class VehiclePhysics {
         // Keep yaw, apply pitch/roll from ground
         const euler = new THREE.Euler().setFromQuaternion(q);
 
-        this.rotation.x += (euler.x - this.rotation.x) * 5 * dt;
-        this.rotation.z += (euler.z - this.rotation.z) * 5 * dt;
+        this.rotation.x += (euler.x - this.rotation.x) * 2 * dt;
+        this.rotation.z += (euler.z - this.rotation.z) * 2 * dt;
 
         this.quaternion.setFromEuler(this.rotation);
     }
