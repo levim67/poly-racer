@@ -69,8 +69,15 @@ body {
 }
 
 @keyframes pulse {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.02); }
+
+    0%,
+    100% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.02);
+    }
 }
 
 .loader-bar {
@@ -142,28 +149,32 @@ body {
 }
 
 .current-time {
-    font-family: 'Orbitron', sans-serif;
-    font-size: 3rem;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 4rem;
     font-weight: 700;
     color: var(--text);
-    text-shadow: 0 0 20px rgba(0, 255, 170, 0.5), 2px 2px 0 rgba(0, 0, 0, 0.5);
+    text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.5);
+    /* Flatter shadow */
 }
 
 .best-time {
-    font-family: 'Orbitron', sans-serif;
-    font-size: 1rem;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1.2rem;
+    font-weight: 600;
     color: var(--primary);
-    text-shadow: 0 0 10px rgba(0, 255, 170, 0.3);
+    margin-top: -5px;
 }
 
 .lap-counter {
-    font-family: 'Orbitron', sans-serif;
-    font-size: 1.2rem;
-    color: var(--accent);
-    background: var(--glass);
-    padding: 5px 20px;
-    border-radius: 20px;
-    border: 1px solid var(--glass-border);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text);
+    background: transparent;
+    /* Remove glass background for cleaner look */
+    padding: 0;
+    border: none;
+    margin-top: 5px;
 }
 
 .hud-bottom {
@@ -177,37 +188,61 @@ body {
 }
 
 .speed-value {
-    font-family: 'Orbitron', sans-serif;
-    font-size: 4rem;
-    font-weight: 900;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 5rem;
+    font-weight: 700;
     color: var(--text);
     line-height: 1;
-    text-shadow: 0 0 30px rgba(255, 255, 255, 0.3), 3px 3px 0 rgba(0, 0, 0, 0.5);
+    text-shadow: 3px 3px 0 rgba(0, 0, 0, 0.5);
 }
 
 .speed-unit {
-    font-family: 'Orbitron', sans-serif;
-    font-size: 1rem;
-    color: var(--text-muted);
-    margin-top: -5px;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--primary);
+    margin-top: -10px;
 }
 
 .checkpoint-flash {
     position: fixed;
-    top: 50%;
+    top: 30%;
     left: 50%;
     transform: translate(-50%, -50%);
-    font-family: 'Orbitron', sans-serif;
-    font-size: 2rem;
-    color: var(--primary);
-    text-shadow: 0 0 30px var(--primary);
-    animation: flashIn 0.5s ease forwards;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 3rem;
+    font-weight: 700;
+    color: var(--accent);
+    text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.5);
+    animation: flashIn 0.8s ease forwards;
+}
+
+#game-version {
+    position: fixed;
+    bottom: 10px;
+    left: 10px;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.5);
+    pointer-events: none;
+    z-index: 1000;
 }
 
 @keyframes flashIn {
-    0% { opacity: 0; transform: translate(-50%, -50%) scale(2); }
-    20% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-    100% { opacity: 0; transform: translate(-50%, -50%) scale(1); }
+    0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(2);
+    }
+
+    20% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+    }
+
+    100% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(1);
+    }
 }
 
 /* Menu Screens */
@@ -447,8 +482,13 @@ body {
 }
 
 @keyframes recordPulse {
-    from { transform: scale(1); }
-    to { transform: scale(1.05); }
+    from {
+        transform: scale(1);
+    }
+
+    to {
+        transform: scale(1.05);
+    }
 }
 
 /* Countdown */
@@ -475,10 +515,25 @@ body {
 }
 
 @keyframes countdownPop {
-    0% { transform: scale(2); opacity: 0; }
-    20% { transform: scale(1); opacity: 1; }
-    80% { transform: scale(1); opacity: 1; }
-    100% { transform: scale(0.8); opacity: 0; }
+    0% {
+        transform: scale(2);
+        opacity: 0;
+    }
+
+    20% {
+        transform: scale(1);
+        opacity: 1;
+    }
+
+    80% {
+        transform: scale(1);
+        opacity: 1;
+    }
+
+    100% {
+        transform: scale(0.8);
+        opacity: 0;
+    }
 }
 
 /* Mobile Controls */
@@ -559,22 +614,24 @@ body {
 
 /* Responsive */
 @media (max-width: 768px) {
-    .game-title, .menu-title {
+
+    .game-title,
+    .menu-title {
         font-size: 2.5rem;
     }
-    
+
     .current-time {
         font-size: 2rem;
     }
-    
+
     .speed-value {
         font-size: 2.5rem;
     }
-    
+
     .hud-bottom {
         bottom: 150px;
     }
-    
+
     .menu-btn {
         font-size: 1rem;
         padding: 12px 30px;
